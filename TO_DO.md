@@ -1,0 +1,2 @@
+- Make this an IRC run by the server
+- First of all, read RFC 1459 [https://datatracker.ietf.org/doc/html/rfc1459], simplify it and then decide what to do
