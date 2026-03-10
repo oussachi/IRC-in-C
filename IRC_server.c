@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<string.h>
 #include"socket_setup.h"
+#include"IRC_structs.h"
 
 #define CRLF "\r\n"
 #define MAX_MSG_LEN 512
