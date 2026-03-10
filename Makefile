@@ -1,2 +1,7 @@
-chat_server:chat_server.c
-		$(CC) chat_server.c -o chat -Wall -Wextra -pedantic -std=c99
+CC := gcc
+
+IRC_server: IRC_server.c  socket_setup.h
+	gcc IRC_server.c -o IRC_server -Wall -Wextra -pedantic -std=c99
+
+clean:
+	rm IRC_server
