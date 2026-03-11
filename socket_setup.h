@@ -55,18 +55,32 @@ int socket_accept(int sockfd, char* msg) {
     return new_sockfd;
 }
 
-int socket_recv_data(int client_sockfd, char* msg) {
-    int recv_length;
-    char buffer[1024];
-    
-    recv_length = recv(client_sockfd, &buffer, 1024, 0);
-    while (recv_length > 0)
-    {
-        printf("%s", msg);
-        memset(buffer, '\0', sizeof(buffer));
-        recv_length = recv(client_sockfd, &buffer, 1024, 0);
-    }
+//int socket_recv_data(int client_sockfd, char* msg, char* data) {
+//    int recv_length;
+//    char buffer[1024];
+//    
+//    recv_length = recv(client_sockfd, &buffer, 1024, 0);
+//    while (recv_length > 0)
+//    {
+//        printf("%s", msg);
+//        strcpy(data, buffer);
+//        memset(buffer, '\0', sizeof(buffer));
+//        recv_length = recv(client_sockfd, &buffer, 1024, 0);
+//    }
+//
+//    close(client_sockfd);
+//    return 0;
+//}
 
+int socket_recv_data(int client_sockfd, char* msg, char *data) {
+    int recv_length;
+    
+    recv_length = recv(client_sockfd, data, 1024, 0);
+    if(recv_length > 0) printf("%s", msg);
+    return 0;
+}
+
+int terminate_connection(int client_sockfd) {
     close(client_sockfd);
     return 0;
 }
