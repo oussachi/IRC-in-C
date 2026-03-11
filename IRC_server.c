@@ -38,27 +38,61 @@ void parse_input(char *input, irc_message *irc_message) {
     token = strtok(NULL, " ");
     int i = 0;
     while(token != NULL && token[0] != ':') {
-        strcpy(irc_message->params[i], token);
+        strcpy(irc_message->params[i], token); // copy the parameters
         token = strtok(NULL, " ");
         i++;
     }
-    strcpy(irc_message->trailing, strchr(input, ':'));
+    strcpy(irc_message->trailing, strchr(input, ':')); // copy the trailing
     irc_message->param_num = i;
 
     free(input_copy);
 }
 
+int client_init(client *c, int sock_fd) {
+    c->socket_fd = sock_fd;
+    strcpy(c->nickname, "");
+    strcpy(c->username,"");
+    strcpy(c->realname,"");
+    c->registered = 0;
+    return 0;
+}
+
+
+//int find_client_by_nickname(char *nickname, client *client_list) {
+//    client current_client;
+//    for(int i = 0; i < sizeof(client_list); i++) {
+//        current_client = client_list[i];
+//        if(strcmp(current_client.nickname, nickname) == 0) {
+//            return 0;
+//        }
+//    }
+//    return 1;
+//}
+
+int handle_nick(client *c, char *nickname) {
+    strcpy(c->nickname, nickname);
+    if(strcmp(c->username, "") != 0) {
+        c->registered = 1;
+    } 
+    return 0;
+}
+
+
 int main() {
     int sock_fd, client_sock_fd;
     char data[512];
     irc_message irc_message;
+    server_state server_state;
+    client client;
 
     sock_fd = server_start(PORT, NUM_REQUESTS);
     client_sock_fd = server_accept(sock_fd);
+    client_init(&client, client_sock_fd);
     while(1) {
-        socket_recv_data(client_sock_fd, "DATA RECEIVED\r\n", data);
+        socket_recv_data(client_sock_fd, data);
         parse_input(data, &irc_message);
-        printf("Command %s\n", irc_message.command);
+        if(strcmp(irc_message.command, "NICK") == 0) handle_nick(&client, irc_message.params[0]);
+        printf("Client nickname : %s\n", client.nickname);
     }
 
 }
