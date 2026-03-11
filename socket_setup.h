@@ -57,6 +57,9 @@ int socket_accept(int sockfd, char* msg) {
 
 int socket_recv_data(int client_sockfd, char *data) {
     recv(client_sockfd, data, 1024, 0);
+    // strip the data of the last \n
+    int len = strlen(data);
+    data[len - 1] = '\0';
     return 0;
 }
 
