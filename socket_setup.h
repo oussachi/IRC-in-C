@@ -56,7 +56,8 @@ int socket_accept(int sockfd, char* msg) {
 }
 
 int socket_recv_data(int client_sockfd, char *data) {
-    recv(client_sockfd, data, 1024, 0);
+    recv(client_sockfd, data, 512, 0);
+
     // strip the data of the last \n
     int len = strlen(data);
     data[len - 1] = '\0';
@@ -69,6 +70,7 @@ int terminate_connection(int client_sockfd) {
 }
 
 int socket_send_data(int client_sockfd, char *data) {
-    send(client_sockfd, data, 1024, 0);
+    int len = strlen(data);
+    send(client_sockfd, data, len, 0);
     return 0;
 }

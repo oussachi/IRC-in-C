@@ -101,7 +101,6 @@ int find_client_by_nickname(char *nickname, server_state *sc) {
     for(int i = 0; i < MAX_CLIENTS; i++) {
         //printf("client's name %s vs nickname %s\n", sc->clients[i]->nickname, nickname);
         if(strcmp(sc->clients[i]->nickname, nickname) == 0) {
-            printf("Nickname taken\n");
             return 1;
         }
     }
@@ -159,11 +158,19 @@ int main() {
     while(1) {
         socket_recv_data(client_sock_fd, data);
         parse_input(data, &irc_message);
-        if((strcmp(irc_message.command, "NICK") == 0) && find_client_by_nickname(irc_message.params[0], &server_state) == 0) {
-            handle_nick(&client, irc_message.params[0]);
+        if((strcmp(irc_message.command, "NICK") == 0)) {
+            if(find_client_by_nickname(irc_message.params[0], &server_state))
+                socket_send_data(client_sock_fd, "Nickname taken ==> Pick another one\n");
+            else
+                handle_nick(&client, irc_message.params[0]);
         }
         else if(strcmp(irc_message.command, "USER") == 0) {
             handle_user(&client, irc_message.params[0], irc_message.trailing);
+        }
+        else {
+            if(client.registered == 0) {
+                socket_send_data(client_sock_fd, "Not registered ==> can't perform this action\n");
+            }
         }
 
         server_clients(&server_state);

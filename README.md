@@ -24,12 +24,12 @@ Currently the project focuses on implementing a basic IRC server capable of hand
 #### Core Protocol
 - [ ] Implement command handling
   - [x] `NICK`
-  - [ ] `USER`
+  - [x] `USER`
   - [ ] `JOIN`
 
 #### Client Registration
-- [ ] Complete registration logic (`NICK` + `USER`)
-- [ ] Mark clients as registered
+- [x] Complete registration logic (`NICK` + `USER`)
+- [x] Mark clients as registered
 - [ ] Send welcome reply
 
 #### Channel Management
@@ -42,7 +42,6 @@ Currently the project focuses on implementing a basic IRC server capable of hand
 - [ ] Basic server responses
 
 #### Networking
-- [ ] Improve socket handling
 - [ ] Support multiple clients
 
 ---
