@@ -10,6 +10,7 @@
 #define MAX_CHANNELS 50
 
 
+// function to setup and start the server
 int server_start(int port, int num_requests) {
     int sock_fd = socket_listen(port, num_requests);
     if(sock_fd < 0) {
@@ -20,6 +21,7 @@ int server_start(int port, int num_requests) {
     return sock_fd;
 }
 
+// Function to accept connections
 int server_accept(int sock_fd) {
     int client_sock_fd;
     client_sock_fd = socket_accept(sock_fd, "NEW CONNECTION\r\n");
@@ -28,14 +30,17 @@ int server_accept(int sock_fd) {
 }
 
 
+// Function used to parse received data into IRC format :
+// COMMAND param1 param2 ... :trailing
+// for now we ignore the optional :prefix field in IRC messages
 void parse_input(char *input, irc_message *irc_message) {
     char *input_copy = malloc(512);
     char *token, *trailing;
 
-    strcpy(input_copy, input);
-    token = strtok(input_copy, " ");
+    strcpy(input_copy, input); // We use a copy string because strtok modifies the input string
+    token = strtok(input_copy, " "); // we split by spaces
     if(token == NULL) exit(1);
-    strcpy(irc_message->command, token); // copy the command from the input to the struct'
+    strcpy(irc_message->command, token); // copy the command from the input to the struct
 
     token = strtok(NULL, " ");
     int i = 0;
@@ -48,13 +53,15 @@ void parse_input(char *input, irc_message *irc_message) {
     if(trailing != NULL) {
         strcpy(irc_message->trailing, trailing); // copy the trailing
     } else {
-        strcpy(irc_message->trailing, "\0"); // copy the trailing
+        strcpy(irc_message->trailing, "\0"); // if no trailing, put a null byte
     }
     irc_message->param_num = i;
 
-    free(input_copy);
+    free(input_copy); // freeing the copy string
 }
 
+
+// Function to initialize the client structs, to avoid searching/writing in arbitrary addresses
 int client_init(client *c, int sock_fd) {
     c->socket_fd = sock_fd;
     strcpy(c->nickname, "");
@@ -64,6 +71,7 @@ int client_init(client *c, int sock_fd) {
     return 0;
 }
 
+// Function to init the server
 int server_init(server_state *sc) {
     sc->clients = malloc(sizeof(client) * MAX_CLIENTS);
     sc->channels = malloc(sizeof(channel) * MAX_CHANNELS);
@@ -74,6 +82,8 @@ int server_init(server_state *sc) {
     return 0;
 }
 
+
+// Function to add a client to the server's state
 int add_client_to_server(server_state *sc, client *c) {
     for(int i = 0; i < MAX_CLIENTS; i++) {
         if(sc->clients[i].socket_fd == -1) {
@@ -84,6 +94,7 @@ int add_client_to_server(server_state *sc, client *c) {
     return 1;
 }
 
+// Function to search for a nickname in a server state, used to avoid nickname collision
 int find_client_by_nickname(char *nickname, server_state *sc) {
     for(int i = 0; i < MAX_CLIENTS; i++) {
         //printf("client's name %s vs nickname %s\n", sc->clients[i].nickname, nickname);
@@ -95,6 +106,8 @@ int find_client_by_nickname(char *nickname, server_state *sc) {
     return 0;
 }
 
+
+// Function to add a nickname to a user
 int handle_nick(client *c, char *nickname, server_state *sc) {
     strcpy(c->nickname, nickname);
     if(strcmp(c->username, "") != 0) {
