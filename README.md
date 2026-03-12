@@ -23,7 +23,7 @@ Currently the project focuses on implementing a basic IRC server capable of hand
 
 #### Core Protocol
 - [ ] Implement command handling
-  - [ ] `NICK`
+  - [x] `NICK`
   - [ ] `USER`
   - [ ] `JOIN`
 

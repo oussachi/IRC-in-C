@@ -1,3 +1,6 @@
+#define MAX_CLIENTS 10
+#define MAX_CHANNELS 5
+
 typedef struct {
     int socket_fd;
     char nickname[15];
@@ -13,8 +16,8 @@ typedef struct {
 } channel;
 
 typedef struct {
-    client *clients;
-    channel *channels;
+    client *clients[MAX_CLIENTS];
+    channel *channels[MAX_CHANNELS];
 } server_state;
 
 typedef struct {

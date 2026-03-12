@@ -6,8 +6,6 @@
 #define MAX_MSG_LEN 512
 #define PORT 2525
 #define NUM_REQUESTS 1
-#define MAX_CLIENTS 100
-#define MAX_CHANNELS 50
 
 
 // function to setup and start the server
@@ -73,21 +71,25 @@ int client_init(client *c, int sock_fd) {
 
 // Function to init the server
 int server_init(server_state *sc) {
-    sc->clients = malloc(sizeof(client) * MAX_CLIENTS);
-    sc->channels = malloc(sizeof(channel) * MAX_CHANNELS);
-
     for(int i = 0; i < MAX_CLIENTS; i++) {
-        client_init(&sc->clients[i], -1);
+        sc->clients[i] = malloc(sizeof(client));
+        client_init(sc->clients[i], -1);
     }
     return 0;
 }
 
+int server_close(server_state *sc) {
+    for(int i = 0; i < MAX_CLIENTS; i++) {
+        free(sc->clients[i]);
+    }
+    return 0;
+}
 
 // Function to add a client to the server's state
 int add_client_to_server(server_state *sc, client *c) {
     for(int i = 0; i < MAX_CLIENTS; i++) {
-        if(sc->clients[i].socket_fd == -1) {
-            sc->clients[i] = *c;
+        if(sc->clients[i]->socket_fd == -1) {
+            sc->clients[i] = c;
             return 0;
         }
     }
@@ -97,8 +99,8 @@ int add_client_to_server(server_state *sc, client *c) {
 // Function to search for a nickname in a server state, used to avoid nickname collision
 int find_client_by_nickname(char *nickname, server_state *sc) {
     for(int i = 0; i < MAX_CLIENTS; i++) {
-        //printf("client's name %s vs nickname %s\n", sc->clients[i].nickname, nickname);
-        if(strcmp(sc->clients[i].nickname, nickname) == 0) {
+        //printf("client's name %s vs nickname %s\n", sc->clients[i]->nickname, nickname);
+        if(strcmp(sc->clients[i]->nickname, nickname) == 0) {
             printf("Nickname taken\n");
             return 1;
         }
@@ -107,20 +109,40 @@ int find_client_by_nickname(char *nickname, server_state *sc) {
 }
 
 
-// Function to add a nickname to a user
-int handle_nick(client *c, char *nickname, server_state *sc) {
+// Function to add a nickname to a user - handle the NICK command
+// format : NICK <nickname>
+int handle_nick(client *c, char *nickname) {
     strcpy(c->nickname, nickname);
     if(strcmp(c->username, "") != 0) {
         c->registered = 1;
     }
-    for(int i = 0; i < MAX_CLIENTS; i++) {
-        if(strcmp(sc->clients[i].nickname,"") == 0) {
-            strcpy(sc->clients[i].nickname, nickname);
-        }
-    }
+    
     return 0;
 }
 
+
+// Function to add a username and realname - handle the USER command
+// format : USER <username> <hostname> <servername> :<realname>
+// The <hostname> and <servername> are historical fields set to 0 and * respectively
+int handle_user(client *c, char *username, char *realname) {
+    strcpy(c->username, username);
+    strcpy(c->realname, realname);
+    if(strcmp(c->nickname, "") != 0) {
+        c->registered = 1;
+    }
+
+    return 0;
+}
+
+
+// A useful function to see all server's clients for debugging
+int server_clients(server_state *sc) {
+    for(int i = 0; i < MAX_CLIENTS; i++) {
+        printf("Client %d : %s, %s, %s, registered[%d]\n", i, sc->clients[i]->nickname, sc->clients[i]->username, sc->clients[i]->realname, sc->clients[i]->registered);
+    }
+
+    return 0;
+}
 
 int main() {
     int sock_fd, client_sock_fd;
@@ -138,10 +160,15 @@ int main() {
         socket_recv_data(client_sock_fd, data);
         parse_input(data, &irc_message);
         if((strcmp(irc_message.command, "NICK") == 0) && find_client_by_nickname(irc_message.params[0], &server_state) == 0) {
-            handle_nick(&client, irc_message.params[0], &server_state);
+            handle_nick(&client, irc_message.params[0]);
         }
-        printf("setting Client nickname : %s\n", client.nickname);
+        else if(strcmp(irc_message.command, "USER") == 0) {
+            handle_user(&client, irc_message.params[0], irc_message.trailing);
+        }
+
+        server_clients(&server_state);
     }
 
     free(data);
+    server_close(&server_state);
 }
