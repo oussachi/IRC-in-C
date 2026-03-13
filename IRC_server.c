@@ -114,6 +114,7 @@ int handle_nick(client *c, char *nickname) {
     strcpy(c->nickname, nickname);
     if(strcmp(c->username, "") != 0) {
         c->registered = 1;
+        socket_send_data(c->socket_fd, "Welcome Abroad\n");
     }
     
     return 0;
@@ -128,6 +129,7 @@ int handle_user(client *c, char *username, char *realname) {
     strcpy(c->realname, realname);
     if(strcmp(c->nickname, "") != 0) {
         c->registered = 1;
+        socket_send_data(c->socket_fd, "Welcome Abroad\n");
     }
 
     return 0;
