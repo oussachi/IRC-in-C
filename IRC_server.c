@@ -8,6 +8,72 @@
 #define NUM_REQUESTS 1
 
 
+/* --------------------------- Channel functions --------------------------- */
+// Function to initialize the channel structs, to avoid searching/writing in arbitrary addresses
+int channel_init(channel *c) {
+    strcpy(c->name, "");
+    return 0;
+}
+
+// Function to search for a channel in a server state
+int find_channel_by_name(char *channel_name, server_state *sc) {
+    for(int i = 0; i < MAX_CHANNELS; i++) {
+        if(strcmp(sc->channels[i]->name, channel_name) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+/* ------------------------------------------------------------------------- */
+
+/* --------------------------- Client functions --------------------------- */
+// Function to initialize the client structs, to avoid searching/writing in arbitrary addresses
+int client_init(client *c, int sock_fd) {
+    c->socket_fd = sock_fd;
+    strcpy(c->nickname, "");
+    strcpy(c->username,"");
+    strcpy(c->realname,"");
+    c->registered = 0;
+    return 0;
+}
+
+
+// Function to add a client to the server's state
+int add_client_to_server(server_state *sc, client *c) {
+    for(int i = 0; i < MAX_CLIENTS; i++) {
+        if(sc->clients[i]->socket_fd == -1) {
+            sc->clients[i] = c;
+            return 0;
+        }
+    }
+    return 1;
+}
+
+// Function to search for a nickname in a server state, used to avoid nickname collision
+int find_client_by_nickname(char *nickname, server_state *sc) {
+    for(int i = 0; i < MAX_CLIENTS; i++) {
+        //printf("client's name %s vs nickname %s\n", sc->clients[i]->nickname, nickname);
+        if(strcmp(sc->clients[i]->nickname, nickname) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+// A useful function to see all server's clients for debugging
+int server_clients(server_state *sc) {
+    for(int i = 0; i < MAX_CLIENTS; i++) {
+        printf("Client %d : %s, %s, %s, registered[%d]\n", i, sc->clients[i]->nickname, sc->clients[i]->username, sc->clients[i]->realname, sc->clients[i]->registered);
+    }
+
+    return 0;
+}
+/* ------------------------------------------------------------------------ */
+
+
+
+/* --------------------------- Server functions -------------------------- */
 // function to setup and start the server
 int server_start(int port, int num_requests) {
     int sock_fd = socket_listen(port, num_requests);
@@ -58,23 +124,6 @@ void parse_input(char *input, irc_message *irc_message) {
     free(input_copy); // freeing the copy string
 }
 
-
-// Function to initialize the client structs, to avoid searching/writing in arbitrary addresses
-int client_init(client *c, int sock_fd) {
-    c->socket_fd = sock_fd;
-    strcpy(c->nickname, "");
-    strcpy(c->username,"");
-    strcpy(c->realname,"");
-    c->registered = 0;
-    return 0;
-}
-
-// Function to initialize the channel structs, to avoid searching/writing in arbitrary addresses
-int channel_init(channel *c) {
-    strcpy(c->name, "");
-    return 0;
-}
-
 // Function to init the server
 int server_init(server_state *sc) {
     for(int i = 0; i < MAX_CLIENTS; i++) {
@@ -94,30 +143,11 @@ int server_close(server_state *sc) {
     }
     return 0;
 }
-
-// Function to add a client to the server's state
-int add_client_to_server(server_state *sc, client *c) {
-    for(int i = 0; i < MAX_CLIENTS; i++) {
-        if(sc->clients[i]->socket_fd == -1) {
-            sc->clients[i] = c;
-            return 0;
-        }
-    }
-    return 1;
-}
-
-// Function to search for a nickname in a server state, used to avoid nickname collision
-int find_client_by_nickname(char *nickname, server_state *sc) {
-    for(int i = 0; i < MAX_CLIENTS; i++) {
-        //printf("client's name %s vs nickname %s\n", sc->clients[i]->nickname, nickname);
-        if(strcmp(sc->clients[i]->nickname, nickname) == 0) {
-            return 1;
-        }
-    }
-    return 0;
-}
+/* ----------------------------------------------------------------------- */
 
 
+
+/* --------------------------- Commands handling --------------------------- */
 // Function to add a nickname to a user - handle the NICK command
 // format : NICK <nickname>
 int handle_nick(client *c, char *nickname) {
@@ -145,33 +175,21 @@ int handle_user(client *c, char *username, char *realname) {
     return 0;
 }
 
-// Function to search for a channel in a server state
-int find_channel_by_name(char *channel_name, server_state *sc) {
-    for(int i = 0; i < MAX_CHANNELS; i++) {
-        if(strcmp(sc->channels[i]->name, channel_name) == 0) {
-            return 1;
-        }
-    }
-    return 0;
-}
+
 
 // Function to join / create a channel
 // Format : JOIN #<channel_name>
-int handle_join(client *c, char *channel_name) {
-    if(find_channel_by_name) {
-        continue
+int handle_join(channel *c, char *channel_name, server_state *sc) {
+    if(find_channel_by_name(channel_name, sc)) {
+        return 0;
+    }
+    else {
+        return 1;
     }
 }
+/* ------------------------------------------------------------------------- */
 
 
-// A useful function to see all server's clients for debugging
-int server_clients(server_state *sc) {
-    for(int i = 0; i < MAX_CLIENTS; i++) {
-        printf("Client %d : %s, %s, %s, registered[%d]\n", i, sc->clients[i]->nickname, sc->clients[i]->username, sc->clients[i]->realname, sc->clients[i]->registered);
-    }
-
-    return 0;
-}
 
 int main() {
     int sock_fd, client_sock_fd;
