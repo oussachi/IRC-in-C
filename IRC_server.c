@@ -69,11 +69,21 @@ int client_init(client *c, int sock_fd) {
     return 0;
 }
 
+// Function to initialize the channel structs, to avoid searching/writing in arbitrary addresses
+int channel_init(channel *c) {
+    strcpy(c->name, "");
+    return 0;
+}
+
 // Function to init the server
 int server_init(server_state *sc) {
     for(int i = 0; i < MAX_CLIENTS; i++) {
         sc->clients[i] = malloc(sizeof(client));
         client_init(sc->clients[i], -1);
+    }
+    for(int i = 0; i < MAX_CHANNELS; i++) {
+        sc->channels[i] = malloc(sizeof(channel));
+
     }
     return 0;
 }
@@ -133,6 +143,24 @@ int handle_user(client *c, char *username, char *realname) {
     }
 
     return 0;
+}
+
+// Function to search for a channel in a server state
+int find_channel_by_name(char *channel_name, server_state *sc) {
+    for(int i = 0; i < MAX_CHANNELS; i++) {
+        if(strcmp(sc->channels[i]->name, channel_name) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// Function to join / create a channel
+// Format : JOIN #<channel_name>
+int handle_join(client *c, char *channel_name) {
+    if(find_channel_by_name) {
+        continue
+    }
 }
 
 

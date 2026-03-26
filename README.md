@@ -30,7 +30,7 @@ Currently the project focuses on implementing a basic IRC server capable of hand
 #### Client Registration
 - [x] Complete registration logic (`NICK` + `USER`)
 - [x] Mark clients as registered
-- [ ] Send welcome reply
+- [x] Send welcome reply
 
 #### Channel Management
 - [ ] Channel creation
@@ -52,6 +52,8 @@ Currently the project focuses on implementing a basic IRC server capable of hand
 - [ ] Send IRC commands
 - [ ] Display server responses
 - [ ] Interactive input
+
+- [ ] Don't forget to check again for security considerations (usage of `gets()`, `strcpy()` ...)
 
 ---
 
