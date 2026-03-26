@@ -153,6 +153,9 @@ int server_close(server_state *sc) {
     for(int i = 0; i < MAX_CLIENTS; i++) {
         free(sc->clients[i]);
     }
+    for(int i = 0; i < MAX_CHANNELS; i++) {
+        free(sc->channels[i]);
+    }
     return 0;
 }
 /* ----------------------------------------------------------------------- */
@@ -240,7 +243,13 @@ int main() {
         else if(strcmp(irc_message.command, "USER") == 0) {
             handle_user(&client, irc_message.params[0], irc_message.trailing);
         }
-        else if(strcmp(irc_message.command, "JOIN") == 0) {
+        else {
+            if(client.registered == 0) {
+                socket_send_data(client_sock_fd, "Not registered ==> can't perform this action\n");
+                continue;
+            }
+        }
+        if(strcmp(irc_message.command, "JOIN") == 0) {
             if(irc_message.param_num > 1) {
                 socket_send_data(client_sock_fd, "Too many arguments for JOIN\n");
             }
@@ -251,11 +260,7 @@ int main() {
                 handle_join(&channel, irc_message.params[0], &server_state);
             }
         }
-        else {
-            if(client.registered == 0) {
-                socket_send_data(client_sock_fd, "Not registered ==> can't perform this action\n");
-            }
-        }
+
         server_channels(&server_state);
         server_clients(&server_state);
     }
