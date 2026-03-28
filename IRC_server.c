@@ -44,7 +44,7 @@ int server_channels(server_state *sc) {
     for(int i = 0; i < MAX_CHANNELS; i++) {
         printf("Channel %d : %s\n", i, sc->channels[i]->name);
         for(int j = 0; j < sc->channels[i]->member_num; j++) {
-            printf("Member %d : %s\n", j, sc->channels[i]->members[i].nickname);
+            printf("\tMember %d : %s\n", j, sc->channels[i]->members[i].nickname);
         }
     }
 
@@ -61,6 +61,8 @@ int client_init(client *c, int sock_fd) {
     strcpy(c->username,"");
     strcpy(c->realname,"");
     c->registered = 0;
+    c->channel_num = 0;
+    c->channels = malloc(sizeof(char *));
     return 0;
 }
 
@@ -92,6 +94,9 @@ int find_client_by_nickname(char *nickname, server_state *sc) {
 int server_clients(server_state *sc) {
     for(int i = 0; i < MAX_CLIENTS; i++) {
         printf("Client %d : %s, %s, %s, registered[%d]\n", i, sc->clients[i]->nickname, sc->clients[i]->username, sc->clients[i]->realname, sc->clients[i]->registered);
+        for(int j = 0; j < sc->clients[i]->channel_num; j++) {
+            printf("\tChannel : %s\n", sc->clients[i]->channels[j]);
+        }
     }
 
     return 0;
@@ -216,9 +221,17 @@ int handle_join(channel *c, char *channel_name, server_state *sc, client *cl) {
     else {
         strcpy(c->name, channel_name);
         add_channel_to_server(sc, c);
+
+        // Add the client to the channel's member list
         c->members = realloc(c->members, sizeof(client) * (c->member_num + 1));
         c->members[c->member_num] = *cl;
         c->member_num++;
+
+        // Add the channel to the client's channel list
+        cl->channels = realloc(cl->channels, sizeof(char *) * (cl->channel_num + 1));
+        cl->channels[cl->channel_num] = malloc(15);
+        strcpy(cl->channels[cl->channel_num], channel_name);
+        cl->channel_num++;
         return 0;
     }
 }

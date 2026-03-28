@@ -7,6 +7,7 @@ typedef struct {
     char username[15];
     char realname[15];
     int registered;
+    int channel_num;
     char **channels;
 } client;
 

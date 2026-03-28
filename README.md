@@ -25,7 +25,7 @@ Currently the project focuses on implementing a basic IRC server capable of hand
 - [ ] Implement command handling
   - [x] `NICK`
   - [x] `USER`
-  - [ ] `JOIN`
+  - [x] `JOIN`
 
 #### Client Registration
 - [x] Complete registration logic (`NICK` + `USER`)
