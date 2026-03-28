@@ -11,6 +11,7 @@ typedef struct {
 } client;
 
 typedef struct {
+    int member_num;
     char name[15];
     client *members;
 } channel;

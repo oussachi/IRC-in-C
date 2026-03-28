@@ -11,7 +11,9 @@
 /* --------------------------- Channel functions --------------------------- */
 // Function to initialize the channel structs, to avoid searching/writing in arbitrary addresses
 int channel_init(channel *c) {
-    strcpy(c->name, "TEST");
+    strcpy(c->name, "");
+    c->member_num = 0;
+    c->members = malloc(sizeof(client));
     return 0;
 }
 
@@ -28,12 +30,25 @@ int find_channel_by_name(char *channel_name, server_state *sc) {
 // Function to create a channel and add it to the server's state
 int add_channel_to_server(server_state *sc, channel *c) {
     for(int i = 0; i < MAX_CHANNELS; i++) {
-        if(strcmp(sc->channels[i]->name, "")) {
+        if(!strcmp(sc->channels[i]->name, "")) {
             sc->channels[i] = c;
             return 0;
         }
     }
     return 1;
+}
+
+
+// A useful function to see all server's channels for debugging
+int server_channels(server_state *sc) {
+    for(int i = 0; i < MAX_CHANNELS; i++) {
+        printf("Channel %d : %s\n", i, sc->channels[i]->name);
+        for(int j = 0; j < sc->channels[i]->member_num; j++) {
+            printf("Member %d : %s\n", j, sc->channels[i]->members[i].nickname);
+        }
+    }
+
+    return 0;
 }
 /* ------------------------------------------------------------------------- */
 
@@ -194,24 +209,18 @@ int handle_user(client *c, char *username, char *realname) {
 
 // Function to join / create a channel
 // Format : JOIN #<channel_name>
-int handle_join(channel *c, char *channel_name, server_state *sc) {
+int handle_join(channel *c, char *channel_name, server_state *sc, client *cl) {
     if(find_channel_by_name(channel_name, sc)) {
         return 0;
     }
     else {
         strcpy(c->name, channel_name);
         add_channel_to_server(sc, c);
+        c->members = realloc(c->members, sizeof(client) * (c->member_num + 1));
+        c->members[c->member_num] = *cl;
+        c->member_num++;
         return 0;
     }
-}
-
-// A useful function to see all server's channels for debugging
-int server_channels(server_state *sc) {
-    for(int i = 0; i < MAX_CHANNELS; i++) {
-        printf("Channel %d : %s\n", i, sc->channels[i]->name);
-    }
-
-    return 0;
 }
 /* ------------------------------------------------------------------------- */
 
@@ -257,7 +266,7 @@ int main() {
                 socket_send_data(client_sock_fd, "Channel name should start with #\n");
             }
             else {
-                handle_join(&channel, irc_message.params[0], &server_state);
+                handle_join(&channel, irc_message.params[0], &server_state, &client);
             }
         }
 
