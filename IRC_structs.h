@@ -1,5 +1,6 @@
 #define MAX_CLIENTS 10
 #define MAX_CHANNELS 5
+#define MAX_MEMBERS 10
 
 typedef struct {
     int socket_fd;

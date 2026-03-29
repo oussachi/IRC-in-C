@@ -11,27 +11,27 @@
 /* --------------------------- Channel functions --------------------------- */
 // Function to initialize the channel structs, to avoid searching/writing in arbitrary addresses
 int channel_init(channel *c) {
-    strcpy(c->name, "");
+    strcpy(c->name, "<>");
     c->member_num = 0;
-    c->members = malloc(sizeof(client));
+    c->members = malloc(sizeof(client) * MAX_MEMBERS);
     return 0;
 }
 
 // Function to search for a channel in a server state
-int find_channel_by_name(char *channel_name, server_state *sc) {
+channel * find_channel_by_name(char *channel_name, server_state *sc) {
     for(int i = 0; i < MAX_CHANNELS; i++) {
         if(strcmp(sc->channels[i]->name, channel_name) == 0) {
-            return 1;
+            return sc->channels[i];
         }
     }
-    return 0;
+    return NULL;
 }
 
 // Function to create a channel and add it to the server's state
 int add_channel_to_server(server_state *sc, channel *c) {
     for(int i = 0; i < MAX_CHANNELS; i++) {
-        if(!strcmp(sc->channels[i]->name, "")) {
-            sc->channels[i] = c;
+        if(!strcmp(sc->channels[i]->name, "<>")) {
+            *sc->channels[i] = *c;
             return 0;
         }
     }
@@ -49,6 +49,27 @@ int server_channels(server_state *sc) {
     }
 
     return 0;
+}
+
+// Function to see if a client (by nickname) has joined a channel already
+int client_in_channel(channel *c, client *cl) {
+    for(int i = 0; i < c->member_num; i++){
+        if(!strcmp(c->members[i].nickname, cl->nickname)) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+// Function to find first empty channel entry
+channel * first_empty_channel(server_state *sc) {
+    for(int i = 0; i < MAX_CHANNELS; i++) {
+        if(strcmp(sc->channels[i]->name, "<>") == 0) {
+            return sc->channels[i];
+        }
+    }
+    return NULL;
 }
 /* ------------------------------------------------------------------------- */
 
@@ -215,17 +236,32 @@ int handle_user(client *c, char *username, char *realname) {
 // Function to join / create a channel
 // Format : JOIN #<channel_name>
 int handle_join(channel *c, char *channel_name, server_state *sc, client *cl) {
-    if(find_channel_by_name(channel_name, sc)) {
-        return 0;
-    }
-    else {
-        strcpy(c->name, channel_name);
-        add_channel_to_server(sc, c);
-
+    if(find_channel_by_name(channel_name, sc) != NULL) {
+        if(client_in_channel(c, cl)) {
+            socket_send_data(cl->socket_fd, "You already joined this channel\n");
+            return 1;
+        }
         // Add the client to the channel's member list
         c->members = realloc(c->members, sizeof(client) * (c->member_num + 1));
         c->members[c->member_num] = *cl;
         c->member_num++;
+
+        // Add the channel to the client's channel list
+        cl->channels = realloc(cl->channels, sizeof(char *) * (cl->channel_num + 1));
+        cl->channels[cl->channel_num] = malloc(15);
+        strcpy(cl->channels[cl->channel_num], channel_name);
+        cl->channel_num++;
+        return 0;
+    }
+    else {
+        c = first_empty_channel(sc);
+        strcpy(c->name, channel_name);
+        // Add the client to the channel's member list
+        c->members = realloc(c->members, sizeof(client) * (c->member_num + 1));
+        c->members[c->member_num] = *cl;
+        c->member_num++;
+        //add_channel_to_server(sc, c);
+
 
         // Add the channel to the client's channel list
         cl->channels = realloc(cl->channels, sizeof(char *) * (cl->channel_num + 1));

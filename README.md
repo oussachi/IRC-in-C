@@ -22,10 +22,11 @@ Currently the project focuses on implementing a basic IRC server capable of hand
 ### IRC Server
 
 #### Core Protocol
-- [ ] Implement command handling
+- [x] Implement command handling
   - [x] `NICK`
   - [x] `USER`
   - [x] `JOIN`
+  - [ ] `PRIVMSG`
 
 #### Client Registration
 - [x] Complete registration logic (`NICK` + `USER`)
@@ -33,7 +34,7 @@ Currently the project focuses on implementing a basic IRC server capable of hand
 - [x] Send welcome reply
 
 #### Channel Management
-- [ ] Channel creation
+- [x] Channel creation
 - [ ] Add/remove clients from channels
 - [ ] Maintain channel membership
 
